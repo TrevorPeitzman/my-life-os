@@ -160,6 +160,60 @@ def note_exists(horizon: str, key: str) -> bool:
 # Open task scanner
 # ---------------------------------------------------------------------------
 
+MILESTONE_CATEGORIES = ("career", "health", "business", "learning", "finance", "personal")
+
+_MILESTONE_RE = re.compile(r"@milestone(?::(\w+))?", re.IGNORECASE)
+
+
+def get_milestones(horizons: list[str] | None = None, days_back: int = 3650) -> list[dict]:
+    """
+    Scan vault notes for lines tagged with @milestone or @milestone:<category>.
+
+    Matches any line containing @milestone, e.g.:
+      - [x] Shipped v2 to production @milestone:career
+      - Got first paying customer @milestone:business
+      ## Milestones
+      - Published article @milestone:learning
+
+    Returns list of {text, date, category, horizon, checked} sorted newest-first.
+    """
+    scan_horizons = horizons or list(HORIZONS)
+    results: list[dict] = []
+
+    for horizon in scan_horizons:
+        subdir = _vault_subdir(horizon)
+        files = sorted(subdir.glob("*.md"), reverse=True)[:days_back]
+        for f in files:
+            if f.stat().st_size > settings.MAX_DAILY_FILE_BYTES:
+                continue
+            try:
+                lines = f.read_text(encoding="utf-8").splitlines()
+            except OSError:
+                continue
+            key = f.stem
+            for line in lines:
+                m = _MILESTONE_RE.search(line)
+                if not m:
+                    continue
+                category = (m.group(1) or "personal").lower()
+                # Strip the @milestone tag and common markdown list prefixes for clean text
+                text = _MILESTONE_RE.sub("", line).strip()
+                text = re.sub(r"^[-*]\s+\[[ xX]\]\s*", "", text).strip()
+                text = re.sub(r"^[-*]\s+", "", text).strip()
+                checked = bool(re.match(r"[-*]\s+\[[xX]\]", line.strip()))
+                results.append({
+                    "text": text,
+                    "date": key,
+                    "category": category if category in MILESTONE_CATEGORIES else "personal",
+                    "horizon": horizon,
+                    "checked": checked,
+                })
+
+    # Sort newest-first (ISO date strings sort lexicographically)
+    results.sort(key=lambda r: r["date"], reverse=True)
+    return results
+
+
 def get_open_tasks(horizon: str = "daily", days_back: int = 90) -> list[dict]:
     """
     Scan vault notes for unchecked GFM tasks (- [ ] ...).

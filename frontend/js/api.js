@@ -103,6 +103,15 @@ const api = {
   getPlanning: (horizon, key) => request("GET",  `/planning/${horizon}/${key}`),
   putPlanning: (horizon, key, content) => request("PUT", `/planning/${horizon}/${key}`, { content }),
   goalBreakdown: (horizon, key) => request("GET", `/planning/goals/breakdown/${horizon}/${key}`),
+
+  // --- Milestones ---
+  getMilestones: (category = null, horizon = null) => {
+    const p = new URLSearchParams();
+    if (category) p.set("category", category);
+    if (horizon) p.set("horizon", horizon);
+    const qs = p.toString() ? `?${p}` : "";
+    return request("GET", `/milestones${qs}`);
+  },
 };
 
 export { api, ApiError };

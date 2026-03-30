@@ -113,6 +113,18 @@ class AISuggestionResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Milestones
+# ---------------------------------------------------------------------------
+
+class Milestone(BaseModel):
+    text: str
+    date: str
+    category: str   # career | health | business | learning | finance | personal
+    horizon: str
+    checked: bool   # True if the source line was a completed task (- [x])
+
+
+# ---------------------------------------------------------------------------
 # Push notifications
 # ---------------------------------------------------------------------------
 

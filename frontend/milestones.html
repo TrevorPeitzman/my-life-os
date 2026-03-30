@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a2e">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <title>Life OS — Milestones</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .category-filter {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .filter-chip {
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .filter-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .timeline { position: relative; padding-left: 20px; }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .milestone-item {
+      position: relative;
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .milestone-item::before {
+      content: '';
+      position: absolute;
+      left: -17px;
+      top: 18px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+    }
+
+    /* Category dot colours */
+    .milestone-item[data-category="career"]::before   { background: #7c6fdb; }
+    .milestone-item[data-category="business"]::before { background: #f5a623; }
+    .milestone-item[data-category="health"]::before   { background: #56c17a; }
+    .milestone-item[data-category="learning"]::before { background: #4ecdc4; }
+    .milestone-item[data-category="finance"]::before  { background: #e0b04f; }
+    .milestone-item[data-category="personal"]::before { background: #b48ead; }
+
+    .milestone-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .milestone-text {
+      font-size: 0.95rem;
+      font-weight: 500;
+      flex: 1;
+      line-height: 1.4;
+    }
+
+    .milestone-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .milestone-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    .date-link {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .date-link:hover { text-decoration: underline; }
+
+    .year-divider {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 24px 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .year-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .copy-btn {
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      cursor: pointer;
+      min-height: 28px;
+    }
+
+    .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    #copy-all-btn {
+      position: fixed;
+      bottom: calc(20px + env(safe-area-inset-bottom));
+      right: 20px;
+      z-index: 50;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 16px;
+      color: var(--text-dim);
+    }
+
+    .empty-state h3 { font-size: 1rem; margin-bottom: 8px; color: var(--text); }
+    .empty-state code {
+      background: var(--surface2);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    /* Category badge colours */
+    .cat-career   { background: #2a1e4a; color: #a89be0; }
+    .cat-business { background: #3a2a0a; color: #f5c06e; }
+    .cat-health   { background: #0a2a1a; color: #7de0a0; }
+    .cat-learning { background: #0a2a2a; color: #6dddd8; }
+    .cat-finance  { background: #2a240a; color: #e0c070; }
+    .cat-personal { background: #2a1a2a; color: #c4a0c0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="btn btn-secondary" style="padding:8px 14px;font-size:0.875rem">← Back</a>
+  <h1>Milestones</h1>
+  <span id="count-label" style="font-size:0.8rem;color:var(--text-dim)"></span>
+</header>
+
+<nav>
+  <a href="/">Today</a>
+  <a href="/milestones.html" class="active">Milestones</a>
+  <a href="/planning.html?horizon=weekly">Weekly</a>
+  <a href="/planning.html?horizon=monthly">Monthly</a>
+  <a href="/planning.html?horizon=quarterly">Quarterly</a>
+  <a href="/planning.html?horizon=yearly">Yearly</a>
+</nav>
+
+<div class="container">
+
+  <div class="card">
+    <h2>How to tag a milestone</h2>
+    <p style="font-size:0.875rem;color:var(--text-dim);margin-bottom:8px">
+      Add <code style="background:var(--surface2);padding:2px 5px;border-radius:4px">@milestone</code>
+      or <code style="background:var(--surface2);padding:2px 5px;border-radius:4px">@milestone:category</code>
+      to any line in any note. Categories:
+      <strong>career</strong>, <strong>business</strong>, <strong>health</strong>,
+      <strong>learning</strong>, <strong>finance</strong>, <strong>personal</strong>.
+    </p>
+    <p style="font-size:0.8rem;color:var(--text-dim)">
+      Examples:<br>
+      <code>- [x] Landed first enterprise client @milestone:business</code><br>
+      <code>- [x] Ran first 5K @milestone:health</code><br>
+      <code>Got promoted to senior engineer @milestone:career</code>
+    </p>
+  </div>
+
+  <!-- Category filters -->
+  <div class="category-filter" id="category-filter">
+    <button class="filter-chip active" data-cat="">All</button>
+    <button class="filter-chip" data-cat="career">💼 Career</button>
+    <button class="filter-chip" data-cat="business">📈 Business</button>
+    <button class="filter-chip" data-cat="health">💪 Health</button>
+    <button class="filter-chip" data-cat="learning">📚 Learning</button>
+    <button class="filter-chip" data-cat="finance">💰 Finance</button>
+    <button class="filter-chip" data-cat="personal">✨ Personal</button>
+  </div>
+
+  <!-- Timeline -->
+  <div id="timeline-container">
+    <div class="loading"><div class="spinner"></div>Loading milestones…</div>
+  </div>
+
+</div>
+
+<!-- Copy all visible milestones for resume use -->
+<button id="copy-all-btn" class="btn btn-secondary" style="display:none">
+  📋 Copy visible for resume
+</button>
+
+<div id="toast"></div>
+
+<script type="module">
+  import { api } from "/js/api.js";
+  import { showToast, showSetupModal } from "/js/utils.js";
+
+  if (!localStorage.getItem("life_os_api_key")) showSetupModal();
+
+  const EMOJI = {
+    career: "💼", business: "📈", health: "💪",
+    learning: "📚", finance: "💰", personal: "✨",
+  };
+
+  let allMilestones = [];
+  let activeCategory = "";
+
+  // ---- Load ----
+  async function load() {
+    try {
+      allMilestones = await api.getMilestones();
+      render(allMilestones);
+    } catch (err) {
+      document.getElementById("timeline-container").innerHTML =
+        `<p style="color:var(--danger)">Could not load milestones: ${esc(err.message)}</p>`;
+    }
+  }
+
+  function render(milestones) {
+    const container = document.getElementById("timeline-container");
+    document.getElementById("count-label").textContent =
+      milestones.length ? `${milestones.length} milestone${milestones.length !== 1 ? "s" : ""}` : "";
+
+    if (milestones.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <h3>No milestones yet</h3>
+          <p>Open any daily or planning note and add <code>@milestone</code> to a line.</p>
+        </div>`;
+      document.getElementById("copy-all-btn").style.display = "none";
+      return;
+    }
+
+    // Group by year
+    const byYear = {};
+    for (const m of milestones) {
+      const year = m.date.slice(0, 4);
+      (byYear[year] = byYear[year] || []).push(m);
+    }
+
+    let html = '<div class="timeline">';
+    for (const year of Object.keys(byYear).sort((a, b) => b - a)) {
+      html += `<div class="year-divider">${year}</div>`;
+      for (const m of byYear[year]) {
+        html += renderMilestone(m);
+      }
+    }
+    html += "</div>";
+    container.innerHTML = html;
+    document.getElementById("copy-all-btn").style.display = "flex";
+
+    // Wire copy buttons
+    container.querySelectorAll(".copy-btn[data-text]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        navigator.clipboard.writeText(btn.dataset.text).then(() => {
+          btn.textContent = "Copied!";
+          setTimeout(() => btn.textContent = "Copy", 1500);
+        });
+      });
+    });
+  }
+
+  function renderMilestone(m) {
+    const dateLabel = formatDate(m.date);
+    const horizonLabel = m.horizon !== "daily" ? ` · ${m.horizon}` : "";
+    const noteHref = m.horizon === "daily"
+      ? `/daily.html?date=${m.date}`
+      : `/planning.html?horizon=${m.horizon}&key=${m.date}`;
+    const resumeText = `${dateLabel} — ${m.text}`;
+
+    return `
+      <div class="milestone-item" data-category="${esc(m.category)}">
+        <div class="milestone-header">
+          <div class="milestone-text">${esc(m.text)}</div>
+          <div class="milestone-actions">
+            <button class="copy-btn" data-text="${esc(resumeText)}" title="Copy for resume">Copy</button>
+          </div>
+        </div>
+        <div class="milestone-meta">
+          <a class="date-link" href="${noteHref}">${dateLabel}${horizonLabel}</a>
+          <span class="badge cat-${esc(m.category)}">${EMOJI[m.category] || "·"} ${esc(m.category)}</span>
+          ${m.checked ? '<span style="color:var(--success)">✓ done</span>' : ''}
+        </div>
+      </div>`;
+  }
+
+  // ---- Category filter ----
+  document.getElementById("category-filter").addEventListener("click", e => {
+    const chip = e.target.closest(".filter-chip");
+    if (!chip) return;
+    activeCategory = chip.dataset.cat;
+    document.querySelectorAll(".filter-chip").forEach(c => c.classList.toggle("active", c === chip));
+    const filtered = activeCategory
+      ? allMilestones.filter(m => m.category === activeCategory)
+      : allMilestones;
+    render(filtered);
+  });
+
+  // ---- Copy all visible ----
+  document.getElementById("copy-all-btn").addEventListener("click", () => {
+    const filtered = activeCategory
+      ? allMilestones.filter(m => m.category === activeCategory)
+      : allMilestones;
+    if (filtered.length === 0) return;
+    const lines = filtered.map(m => `${formatDate(m.date)} — ${m.text} [${m.category}]`);
+    navigator.clipboard.writeText(lines.join("\n")).then(() => {
+      showToast(`Copied ${lines.length} milestone${lines.length !== 1 ? "s" : ""} to clipboard`, "ok");
+    });
+  });
+
+  // ---- Helpers ----
+  function formatDate(iso) {
+    // Handle both YYYY-MM-DD and planning keys like 2026-W13
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+      return new Date(iso + "T12:00:00").toLocaleDateString(undefined, {
+        year: "numeric", month: "short", day: "numeric",
+      });
+    }
+    return iso;
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  // ---- Extend api with milestones ----
+  // (api.js doesn't have this yet, call directly)
+  Object.assign(api, {
+    getMilestones: (category, horizon) => {
+      const p = new URLSearchParams();
+      if (category) p.set("category", category);
+      if (horizon) p.set("horizon", horizon);
+      const qs = p.toString() ? `?${p}` : "";
+      const key = localStorage.getItem("life_os_api_key");
+      return fetch(`/api/milestones${qs}`, {
+        headers: { Authorization: `Bearer ${key}` },
+      }).then(r => r.json());
+    },
+  });
+
+  load();
+</script>
+
+<div id="setup-modal" class="hidden">
+  <div class="modal-box">
+    <h2>API key required</h2>
+    <p>Go back to the <a href="/" style="color:var(--accent)">home page</a> to set up your API key.</p>
+  </div>
+</div>
+
+</body>
+</html>

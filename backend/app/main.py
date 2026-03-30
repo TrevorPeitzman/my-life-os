@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.models import HealthResponse
-from app.routers import ai, calendar, daily, journal, planning, push, tasks
+from app.routers import ai, calendar, daily, journal, milestones, planning, push, tasks
 from app.services import gcal_service
 
 logging.basicConfig(
@@ -104,6 +104,7 @@ app.include_router(push.router, dependencies=_auth)
 app.include_router(ai.router, dependencies=_auth)
 app.include_router(calendar.router, dependencies=_auth)
 app.include_router(planning.router, dependencies=_auth)
+app.include_router(milestones.router, dependencies=_auth)
 
 
 # ---------------------------------------------------------------------------
