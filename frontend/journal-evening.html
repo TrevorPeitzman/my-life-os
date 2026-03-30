@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a2e">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <title>Life OS — Evening</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header>
+  <a href="/" class="btn btn-secondary" style="padding:8px 14px;font-size:0.875rem">← Back</a>
+  <h1>Evening Reflection</h1>
+  <span class="journal-date" style="font-size:0.8rem;color:var(--text-dim)"></span>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <p style="font-size:0.875rem;color:var(--text-dim);margin-bottom:4px">
+      Take 5 minutes to close the day and set up tomorrow.
+    </p>
+    <p class="journal-date" style="font-size:0.875rem;color:var(--accent2)"></p>
+  </div>
+
+  <form id="journal-form" data-type="evening">
+
+    <!-- Mood -->
+    <div class="card">
+      <h2>Evening Energy</h2>
+      <div class="field">
+        <label for="mood-score">Evening mood: <strong id="mood-label">5</strong>/10</label>
+        <input type="range" id="mood-score" min="1" max="10" value="5" step="1">
+        <div class="range-labels"><span>1 — exhausted</span><span>10 — energised</span></div>
+      </div>
+    </div>
+
+    <!-- Wins -->
+    <div class="card">
+      <h2>Three Wins Today</h2>
+      <p style="font-size:0.875rem;color:var(--text-dim);margin-bottom:14px">
+        Small counts. What actually happened today that moved you forward?
+      </p>
+
+      <div class="field">
+        <label for="win-1">Win #1</label>
+        <input type="text" id="win-1" placeholder="Finished the draft, shipped the fix, made the call…" required>
+      </div>
+
+      <div class="field">
+        <label for="win-2">Win #2</label>
+        <input type="text" id="win-2" placeholder="" required>
+      </div>
+
+      <div class="field">
+        <label for="win-3">Win #3</label>
+        <input type="text" id="win-3" placeholder="" required>
+      </div>
+    </div>
+
+    <!-- Reflection -->
+    <div class="card">
+      <h2>Reflection</h2>
+
+      <div class="field">
+        <label for="change">One thing I'd change about how I used my time today?</label>
+        <textarea
+          id="change"
+          rows="3"
+          placeholder="Start deep work earlier, fewer context switches…"
+          required
+        ></textarea>
+      </div>
+
+      <div class="field">
+        <label for="feeling">How am I feeling about tomorrow?</label>
+        <textarea
+          id="feeling"
+          rows="3"
+          placeholder="Calm and ready, slightly anxious about the meeting, optimistic…"
+          required
+        ></textarea>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-full" style="margin-bottom:24px">
+      Save evening entry
+    </button>
+
+  </form>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+  import "/js/journal.js";
+  import { showSetupModal } from "/js/utils.js";
+  if (!localStorage.getItem("life_os_api_key")) showSetupModal();
+</script>
+
+<div id="setup-modal" class="hidden">
+  <div class="modal-box">
+    <h2>API key required</h2>
+    <p>Go back to the <a href="/" style="color:var(--accent)">home page</a> to set up your API key.</p>
+  </div>
+</div>
+
+</body>
+</html>

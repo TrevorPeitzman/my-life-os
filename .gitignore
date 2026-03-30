@@ -1,0 +1,17 @@
+vault/
+.env
+nginx/certs/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+config/push_subscriptions.json
+config/google_tokens.json
+*.lock
+.DS_Store
