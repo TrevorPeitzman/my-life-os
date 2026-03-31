@@ -1,5 +1,8 @@
 FROM python:3.12-slim
 
+# Prevent apt from prompting for timezone or mail server config during build
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Install system deps: cron daemon + tzdata for correct timezone handling
 RUN apt-get update && apt-get install -y --no-install-recommends \
         cron \
