@@ -43,7 +43,7 @@ services:
 
   cron:
     build: ./backend
-    command: crond -f -l 8
+    command: cron -f -L 8
     environment:
       API_KEY: ${API_KEY}
       VAULT_DIR: /app/vault
