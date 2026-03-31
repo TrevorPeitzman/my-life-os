@@ -26,6 +26,11 @@ services:
       - ./config:/app/config
       # Frontend static files served directly by FastAPI (no nginx needed)
       - ./frontend:/app/frontend:ro
+    ports:
+      # Bind to host localhost only — reachable by the existing cloudflared
+      # tunnel running on the host, but not exposed to the LAN or internet.
+      # Point your Cloudflare tunnel public hostname at: http://localhost:8000
+      - "127.0.0.1:8000:8000"
     networks:
       - internal
     restart: unless-stopped
@@ -35,28 +40,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-
-  # Cloudflare Tunnel — outbound only, no open inbound ports required.
-  #
-  # Setup (one-time, in Cloudflare Zero Trust dashboard):
-  #   1. Networks → Tunnels → Create tunnel → Cloudflared
-  #   2. Copy the tunnel token into your .env as CLOUDFLARE_TUNNEL_TOKEN
-  #   3. Add a Public Hostname:
-  #        Subdomain: lifeos (or whatever)
-  #        Domain:    yourdomain.com
-  #        Service:   http://backend:8000
-  #   4. Save — Cloudflare handles TLS automatically (no certs to manage)
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    command: tunnel --no-autoupdate run
-    environment:
-      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
-    networks:
-      - internal
-    depends_on:
-      backend:
-        condition: service_healthy
-    restart: unless-stopped
 
   cron:
     build: ./backend
