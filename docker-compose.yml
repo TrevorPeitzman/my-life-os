@@ -29,8 +29,9 @@ services:
     ports:
       # Bind to host localhost only — reachable by the existing cloudflared
       # tunnel running on the host, but not exposed to the LAN or internet.
-      # Point your Cloudflare tunnel public hostname at: http://localhost:8000
-      - "127.0.0.1:8000:8000"
+      # Set HOST_PORT in .env to avoid conflicts with other services.
+      # Point your Cloudflare tunnel public hostname at: http://localhost:<HOST_PORT>
+      - "127.0.0.1:${HOST_PORT:-8080}:8000"
     networks:
       - internal
     restart: unless-stopped
