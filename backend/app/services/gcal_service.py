@@ -162,7 +162,7 @@ def get_free_slots(day: str) -> list[dict]:
             "timeMin": f"{day}T00:00:00Z",
             "timeMax": f"{day}T23:59:59Z",
             "timeZone": tz,
-            "items": [{"id": cal_id} for cal_id in settings.GOOGLE_CALENDAR_IDS],
+            "items": [{"id": cal_id} for cal_id in settings.calendar_ids_list],
         }
         result = service.freebusy().query(body=body).execute()
     except Exception as exc:

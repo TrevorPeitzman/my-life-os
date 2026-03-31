@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     TZ: str = "America/New_York"
 
     # --- CORS ---
-    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: str = "https://localhost"
 
     # --- VAPID ---
     VAPID_PRIVATE_KEY: str | None = None
@@ -45,25 +45,19 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str | None = None
     GOOGLE_CLIENT_SECRET: str | None = None
     GOOGLE_REDIRECT_URI: str | None = None
-    GOOGLE_CALENDAR_IDS: list[str] = ["primary"]
+    GOOGLE_CALENDAR_IDS: str = "primary"
     GOOGLE_CALENDAR_WRITE_ID: str = "primary"
 
     # --- Limits ---
     MAX_DAILY_FILE_BYTES: int = 524288  # 512 KB
 
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v: str | list) -> list[str]:
-        if isinstance(v, str):
-            return [s.strip() for s in v.split(",") if s.strip()]
-        return v
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [s.strip() for s in self.CORS_ORIGINS.split(",") if s.strip()]
 
-    @field_validator("GOOGLE_CALENDAR_IDS", mode="before")
-    @classmethod
-    def parse_calendar_ids(cls, v: str | list) -> list[str]:
-        if isinstance(v, str):
-            return [s.strip() for s in v.split(",") if s.strip()]
-        return v
+    @property
+    def calendar_ids_list(self) -> list[str]:
+        return [s.strip() for s in self.GOOGLE_CALENDAR_IDS.split(",") if s.strip()]
 
     @model_validator(mode="after")
     def create_directories(self) -> "Settings":
