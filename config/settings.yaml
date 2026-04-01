@@ -1,0 +1,21 @@
+# Life OS — non-secret runtime configuration
+# Edit this file on the server; restart the backend container to pick up changes.
+# Secret values (API keys, VAPID keys) must be set in .env, not here.
+
+daily_template:
+  sections:
+    - "## Morning"
+    - "## Tasks"
+    - "## Notes"
+    - "## Evening"
+
+push:
+  morning_hour: 7   # 07:00 in configured TZ
+  evening_hour: 20  # 20:00 in configured TZ
+
+tasks:
+  scan_days_back: 90
+
+ai:
+  # Max tokens to send from the daily note to the AI (keeps costs low)
+  max_note_chars: 3000

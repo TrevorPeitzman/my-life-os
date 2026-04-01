@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a2e">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <title>Life OS — Note Editor</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header>
+  <a href="/" class="btn btn-secondary" style="padding:8px 14px;font-size:0.875rem">← Back</a>
+  <h1 id="note-title">Note</h1>
+  <button id="save-btn" class="btn btn-primary" style="padding:8px 16px">Save</button>
+</header>
+
+<div class="container">
+  <div id="loading" class="loading"><div class="spinner"></div>Loading note…</div>
+  <textarea
+    id="md-editor"
+    class="md-editor"
+    style="display:none;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:16px;"
+    placeholder="Start writing in Markdown…"
+    spellcheck="true"
+  ></textarea>
+  <p style="font-size:0.75rem;color:var(--text-dim);margin-top:8px;text-align:right">
+    Ctrl+S / ⌘S to save
+  </p>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+  import "/js/daily.js";
+  import { showSetupModal } from "/js/utils.js";
+  if (!localStorage.getItem("life_os_api_key")) showSetupModal();
+</script>
+
+<div id="setup-modal" class="hidden">
+  <div class="modal-box">
+    <h2>API key required</h2>
+    <p>Go back to the <a href="/" style="color:var(--accent)">home page</a> to set up your API key.</p>
+  </div>
+</div>
+
+</body>
+</html>

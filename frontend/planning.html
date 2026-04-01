@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a2e">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <title>Life OS — Planning</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header>
+  <a href="/" class="btn btn-secondary" style="padding:8px 14px;font-size:0.875rem">← Back</a>
+  <h1 id="page-title">Planning</h1>
+  <button id="save-btn" class="btn btn-primary" style="padding:8px 16px">Save</button>
+</header>
+
+<nav>
+  <a href="/" >Today</a>
+  <a href="/planning.html?horizon=weekly" id="tab-weekly" class="horizon-tab">Weekly</a>
+  <a href="/planning.html?horizon=monthly" id="tab-monthly" class="horizon-tab">Monthly</a>
+  <a href="/planning.html?horizon=quarterly" id="tab-quarterly" class="horizon-tab">Quarterly</a>
+  <a href="/planning.html?horizon=yearly" id="tab-yearly" class="horizon-tab">Yearly</a>
+</nav>
+
+<div class="container">
+
+  <!-- Key selector -->
+  <div class="card" id="key-selector">
+    <h2 id="key-label">Select period</h2>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="text" id="key-input" placeholder="e.g. 2026-W13" style="flex:1;min-width:160px">
+      <button id="load-btn" class="btn btn-secondary">Load</button>
+      <button id="new-btn" class="btn btn-secondary">New from template</button>
+    </div>
+    <p id="key-hint" style="font-size:0.8rem;color:var(--text-dim);margin-top:8px"></p>
+  </div>
+
+  <!-- Goal breakdown (shown after loading) -->
+  <div class="card" id="breakdown-card" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h2 style="margin:0">Goal Hierarchy</h2>
+      <button id="breakdown-btn" class="btn btn-secondary" style="padding:6px 12px;font-size:0.8rem">Show breakdown</button>
+    </div>
+    <div id="breakdown-content"></div>
+  </div>
+
+  <!-- Note editor -->
+  <div id="loading" class="loading" style="display:none"><div class="spinner"></div>Loading…</div>
+  <textarea
+    id="md-editor"
+    class="md-editor"
+    style="display:none;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:16px;min-height:500px"
+    placeholder="Planning note will appear here…"
+  ></textarea>
+  <p id="save-hint" style="font-size:0.75rem;color:var(--text-dim);margin-top:8px;text-align:right;display:none">
+    Ctrl+S / ⌘S to save
+  </p>
+
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+  import { api } from "/js/api.js";
+  import { showToast, getToday, showSetupModal } from "/js/utils.js";
+
+  if (!localStorage.getItem("life_os_api_key")) { showSetupModal(); }
+
+  const params = new URLSearchParams(location.search);
+  let horizon = params.get("horizon") || "weekly";
+  let currentKey = params.get("key") || "";
+
+  // ---- Horizon hints ----
+  const hints = {
+    weekly:    "Format: YYYY-WNN  e.g. 2026-W13",
+    monthly:   "Format: YYYY-MM  e.g. 2026-03",
+    quarterly: "Format: YYYY-QN  e.g. 2026-Q1",
+    yearly:    "Format: YYYY     e.g. 2026",
+  };
+
+  const defaultKeys = {
+    weekly:    () => { const d = new Date(); return `${d.getFullYear()}-W${isoWeek(d)}`; },
+    monthly:   () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; },
+    quarterly: () => { const d = new Date(); return `${d.getFullYear()}-Q${Math.ceil((d.getMonth()+1)/3)}`; },
+    yearly:    () => String(new Date().getFullYear()),
+  };
+
+  function isoWeek(d) {
+    const jan4 = new Date(d.getFullYear(), 0, 4);
+    const startOfWeek1 = new Date(jan4);
+    startOfWeek1.setDate(jan4.getDate() - jan4.getDay() + 1);
+    const diff = d - startOfWeek1;
+    return String(Math.ceil((diff / 86400000 + 1) / 7)).padStart(2, "0");
+  }
+
+  // ---- Init ----
+  document.getElementById("key-hint").textContent = hints[horizon] || "";
+  document.getElementById("key-label").textContent = horizon.charAt(0).toUpperCase() + horizon.slice(1) + " note";
+  document.getElementById("page-title").textContent = horizon.charAt(0).toUpperCase() + horizon.slice(1) + " Planning";
+
+  // Mark active tab
+  document.getElementById(`tab-${horizon}`)?.classList.add("active");
+
+  if (!currentKey) {
+    currentKey = defaultKeys[horizon]?.() || "";
+  }
+  document.getElementById("key-input").value = currentKey;
+
+  if (currentKey) loadNote(currentKey);
+
+  // ---- Load ----
+  document.getElementById("load-btn").addEventListener("click", () => {
+    const k = document.getElementById("key-input").value.trim();
+    if (k) loadNote(k);
+  });
+
+  document.getElementById("new-btn").addEventListener("click", async () => {
+    const k = document.getElementById("key-input").value.trim();
+    if (!k) { showToast("Enter a key first", "warn"); return; }
+    await loadNote(k); // Creates from template on first load
+  });
+
+  async function loadNote(key) {
+    currentKey = key;
+    const loading = document.getElementById("loading");
+    const editor = document.getElementById("md-editor");
+    loading.style.display = "flex";
+    editor.style.display = "none";
+    try {
+      const note = await api.getPlanning(horizon, key);
+      editor.value = note.content;
+      loading.style.display = "none";
+      editor.style.display = "block";
+      document.getElementById("save-hint").style.display = "block";
+      document.getElementById("breakdown-card").style.display = "block";
+      history.replaceState(null, "", `?horizon=${horizon}&key=${key}`);
+    } catch (err) {
+      loading.style.display = "none";
+      showToast(`Error: ${err.message}`, "error");
+    }
+  }
+
+  // ---- Save ----
+  async function save() {
+    const content = document.getElementById("md-editor").value;
+    const btn = document.getElementById("save-btn");
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+    try {
+      await api.putPlanning(horizon, currentKey, content);
+      showToast("Saved", "ok");
+    } catch (err) {
+      showToast(`Save failed: ${err.message}`, "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Save";
+    }
+  }
+
+  document.getElementById("save-btn").addEventListener("click", save);
+  document.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); save(); }
+  });
+
+  // ---- Goal breakdown ----
+  document.getElementById("breakdown-btn").addEventListener("click", async () => {
+    const container = document.getElementById("breakdown-content");
+    container.innerHTML = `<div class="loading"><div class="spinner"></div></div>`;
+    try {
+      const data = await api.goalBreakdown(horizon, currentKey);
+      container.innerHTML = renderBreakdown(data);
+    } catch (err) {
+      container.innerHTML = `<p style="color:var(--text-dim);font-size:0.875rem">${err.message}</p>`;
+    }
+  });
+
+  function renderBreakdown(node, depth = 0) {
+    const indent = depth * 16;
+    const tasks = node.open_tasks.length
+      ? `<ul style="margin:4px 0 0 12px">${node.open_tasks.map(t => `<li style="font-size:0.8rem;color:var(--text-dim)">${esc(t)}</li>`).join("")}</ul>`
+      : "";
+    const children = (node.children || []).map(c => renderBreakdown(c, depth + 1)).join("");
+    return `
+      <div style="margin-left:${indent}px;padding:8px 0;border-left:${depth > 0 ? '2px solid var(--border)' : 'none'};padding-left:${depth > 0 ? '12px' : '0'}">
+        <span class="badge badge-info" style="margin-right:6px">${esc(node.horizon)}</span>
+        <a href="/planning.html?horizon=${node.horizon}&key=${node.key}" style="color:var(--text);font-weight:500">${esc(node.key)}</a>
+        ${node.title && node.title !== node.key ? `<span style="color:var(--text-dim);font-size:0.875rem"> — ${esc(node.title)}</span>` : ""}
+        ${tasks}
+      </div>
+      ${children}`;
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+</script>
+
+<div id="setup-modal" class="hidden">
+  <div class="modal-box">
+    <h2>API key required</h2>
+    <p>Go back to the <a href="/" style="color:var(--accent)">home page</a> to set up your API key.</p>
+  </div>
+</div>
+
+</body>
+</html>
