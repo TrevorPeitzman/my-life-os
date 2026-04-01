@@ -63,6 +63,13 @@ class AppleHealthData(BaseModel):
     sleep_hours: float | None = None
     sleep_score: int | None = None  # 0-100
 
+    @field_validator("date")
+    @classmethod
+    def validate_date(cls, v: str) -> str:
+        if not _DATE_RE.match(v):
+            raise ValueError("date must be in YYYY-MM-DD format")
+        return v
+
     @field_validator("sleep_score")
     @classmethod
     def validate_score(cls, v: int | None) -> int | None:
@@ -108,6 +115,7 @@ class PlanningUpdateRequest(BaseModel):
 # Time blocks & AI
 # ---------------------------------------------------------------------------
 
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _TIME_RE = re.compile(r"^\d{2}:\d{2}$")
 
 
