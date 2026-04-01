@@ -15,3 +15,4 @@ config/push_subscriptions.json
 config/google_tokens.json
 *.lock
 .DS_Store
+.worktrees/
