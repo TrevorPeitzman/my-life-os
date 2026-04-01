@@ -9,6 +9,10 @@ A self-hosted personal operating system for daily planning, journaling, long-ter
 - **Hierarchical goal planning** — linked daily → weekly → monthly → quarterly → yearly horizons, each with its own Markdown vault entry
 - **Milestone tagging** — tag any line in any vault entry with `@milestone` (or `@milestone:category`) to surface achievements in a dedicated timeline view
 - **Journal** — structured morning and evening journal entries separate from task/planning content
+- **Redesigned morning journal** — three gratitude entries, three "what would make today great?" entries, an energy/realistic-work assessment, and a daily affirmations block; yesterday's affirmations appear as a ghost placeholder so you rewrite them fresh each day
+- **Daily quote and weekly challenge** — an inspiring quote is shown at the top of both morning and evening check-ins, changing daily; Mondays show a short weekly challenge instead; same content appears on both pages since the quote is date-seeded
+- **Calendar consistency view** — month grid where each day square fills based on check-in completion: bottom half for morning, top half for evening, full fill when both are done; navigable by month from the Calendar nav tab
+- **Apple Health sleep seeding** — optional iOS Shortcut posts overnight sleep data to the app; the morning journal pre-fills the sleep hours field and seeds the mood slider from the sleep score
 - **AI suggestions** — daily prompts and reflection nudges via Mistral API or local Claude Code CLI
 - **Google Calendar integration** — read free/busy data and write new events without leaving the app
 - **Push notifications** — twice-daily VAPID web push reminders (7 AM morning, 8 PM evening)
@@ -143,6 +147,23 @@ Open `https://lifeos.yourdomain.com` in your browser, enter your API key when pr
 4. Add your redirect URI: `https://lifeos.yourdomain.com/api/calendar/callback`
 5. Copy the client ID and secret into `.env`.
 6. After deploying, open the app, navigate to the Calendar tab, and click **Connect Google Calendar**. Complete the OAuth flow once — the token is stored in `./config/` and refreshed automatically.
+
+## Apple Health Integration (Optional)
+
+Create an iOS Shortcut to automatically send last night's sleep data to Life OS:
+
+1. Open the **Shortcuts** app.
+2. Create a new Shortcut with:
+   - **Get Health Samples** (Sleep Analysis, sum, last night)
+   - **Get Health Samples** (Sleep Score, average, last night — if available on your device)
+   - **Get Contents of URL**
+     - URL: `https://lifeos.yourdomain.com/api/health/apple`
+     - Method: POST
+     - Headers: `Authorization: Bearer <your-api-key>`
+     - Body (JSON): `{"date":"<current-date>","sleep_hours":<hours>,"sleep_score":<score>}`
+3. Add the shortcut to a **Personal Automation** set to run at your usual wake time.
+
+The morning journal reads the stored values and pre-fills sleep hours and mood (sleep score divided by 10, rounded down, clamped 1–10). You can still override both before saving.
 
 ## AI Suggestions
 
