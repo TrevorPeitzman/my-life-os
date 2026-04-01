@@ -9,6 +9,7 @@ filelock==3.16.1
 python-dateutil==2.9.0
 PyYAML==6.0.2
 slowapi==0.1.9
+aiofiles==24.1.0
 google-auth==2.35.0
 google-auth-oauthlib==1.2.1
 google-api-python-client==2.149.0

@@ -137,28 +137,26 @@
 
 <script type="module">
   import { api, ApiError } from "/js/api.js";
-  import { showToast, showSetupModal, hideSetupModal } from "/js/utils.js";
+  import { showToast } from "/js/utils.js";
   import { registerServiceWorker, requestPushPermission, subscribeToPush, showIOSInstallBanner } from "/js/push.js";
   import "/js/today.js";
 
-  // ---- Auth guard ----
-  async function checkAuth() {
-    const key = localStorage.getItem("life_os_api_key");
-    if (!key) { showSetupModal(); return; }
-    try {
-      const r = await fetch("/api/health");
-      if (!r.ok) throw new Error();
-    } catch {
-      showSetupModal();
-    }
-  }
+  const modal       = document.getElementById("setup-modal");
+  const apiKeyInput = document.getElementById("api-key-input");
+  const errEl       = document.getElementById("setup-error");
 
+  function showModal() { modal.classList.remove("hidden"); }
+  function hideModal() { modal.classList.add("hidden"); }
+
+  // ---- Auth check — synchronous, runs before any await ----
+  if (!localStorage.getItem("life_os_api_key")) showModal();
+
+  // ---- Save API key ----
   document.getElementById("save-key-btn").addEventListener("click", async () => {
-    const key = document.getElementById("api-key-input").value.trim();
-    const errEl = document.getElementById("setup-error");
+    const key = apiKeyInput.value.trim();
     errEl.style.display = "none";
     if (!key) return;
-    // Test the key
+
     const resp = await fetch(`/api/daily/${api.getToday()}`, {
       headers: { Authorization: `Bearer ${key}` },
     });
@@ -168,18 +166,22 @@
       return;
     }
     localStorage.setItem("life_os_api_key", key);
-    hideSetupModal();
-    location.reload();
+    hideModal();
+    location.reload(); // reload to populate all content now that key is set
   });
 
+  // ---- Logout — show modal directly, no reload needed ----
   document.getElementById("logout-btn").addEventListener("click", () => {
     localStorage.removeItem("life_os_api_key");
-    location.reload();
+    apiKeyInput.value = "";
+    errEl.style.display = "none";
+    showModal();
   });
 
-  // ---- Push setup ----
-  const sw = await registerServiceWorker();
-  showIOSInstallBanner();
+  // ---- Push setup (async, after auth check) ----
+  registerServiceWorker().then(() => {
+    showIOSInstallBanner();
+  });
 
   document.getElementById("enable-push-btn").addEventListener("click", async () => {
     const granted = await requestPushPermission();
@@ -197,8 +199,6 @@
     document.getElementById("push-status").textContent = "✓ Notifications already enabled";
     document.getElementById("enable-push-btn").textContent = "Re-subscribe";
   }
-
-  checkAuth();
 </script>
 </body>
 </html>
