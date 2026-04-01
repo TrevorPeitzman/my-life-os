@@ -22,7 +22,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.models import HealthResponse
-from app.routers import ai, calendar, daily, health_data, journal, milestones, planning, push, tasks
+from app.routers import ai, calendar, daily, health_data, journal, milestones, planning, push, quote, tasks
 from app.services import gcal_service
 
 logging.basicConfig(
@@ -117,6 +117,7 @@ app.include_router(calendar.router,    prefix=_api, dependencies=_auth)
 app.include_router(planning.router,    prefix=_api, dependencies=_auth)
 app.include_router(milestones.router,  prefix=_api, dependencies=_auth)
 app.include_router(health_data.router, prefix=_api, dependencies=_auth)
+app.include_router(quote.router,        prefix=_api, dependencies=_auth)
 
 # ---------------------------------------------------------------------------
 # Static file serving
