@@ -112,6 +112,11 @@ const api = {
     const qs = p.toString() ? `?${p}` : "";
     return request("GET", `/milestones${qs}`);
   },
+
+  // --- Quote ---
+  getQuote(day) {
+    return this.request("GET", `/quote/${day}`);
+  },
 };
 
 export { api, ApiError };
