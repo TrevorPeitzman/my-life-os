@@ -268,14 +268,21 @@ created: {created}
 sleep_hours: null
 mood_morning: null
 mood_evening: null
+apple_sleep_hours: null
+apple_sleep_score: null
 tags: []
 ---
 
 ## Morning
 
-**Success metric**:
-**Gratitude**:
+**Grateful 1**:
+**Grateful 2**:
+**Grateful 3**:
+**Great today 1**:
+**Great today 2**:
+**Great today 3**:
 **Realistic work**:
+**Affirmation**:
 
 ## Tasks
 
