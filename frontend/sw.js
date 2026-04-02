@@ -8,7 +8,7 @@
  *   4. Handle notification click → open PWA URL
  */
 
-const CACHE_VERSION = "v3";
+const CACHE_VERSION = "v4";
 const CACHE_NAME = `life-os-${CACHE_VERSION}`;
 
 const APP_SHELL = [
