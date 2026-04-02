@@ -11,9 +11,14 @@ from pydantic import BaseModel, field_validator
 # ---------------------------------------------------------------------------
 
 class MorningEntry(BaseModel):
-    success: str
-    gratitude: str
+    gratitude_1: str
+    gratitude_2: str
+    gratitude_3: str
+    great_1: str
+    great_2: str
+    great_3: str
     realistic_work: str
+    affirmation: str
     mood_score: int | None = None
     sleep_hours: float | None = None
 
@@ -53,6 +58,33 @@ class EveningEntry(BaseModel):
         return v
 
 
+class AppleHealthData(BaseModel):
+    date: str          # YYYY-MM-DD
+    sleep_hours: float | None = None
+    sleep_score: int | None = None  # 0-100
+
+    @field_validator("date")
+    @classmethod
+    def validate_date(cls, v: str) -> str:
+        if not _DATE_RE.match(v):
+            raise ValueError("date must be in YYYY-MM-DD format")
+        return v
+
+    @field_validator("sleep_score")
+    @classmethod
+    def validate_score(cls, v: int | None) -> int | None:
+        if v is not None and not (0 <= v <= 100):
+            raise ValueError("sleep_score must be between 0 and 100")
+        return v
+
+    @field_validator("sleep_hours")
+    @classmethod
+    def validate_sleep(cls, v: float | None) -> float | None:
+        if v is not None and not (0 < v <= 24):
+            raise ValueError("sleep_hours must be between 0 and 24")
+        return v
+
+
 # ---------------------------------------------------------------------------
 # Planning
 # ---------------------------------------------------------------------------
@@ -83,6 +115,7 @@ class PlanningUpdateRequest(BaseModel):
 # Time blocks & AI
 # ---------------------------------------------------------------------------
 
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _TIME_RE = re.compile(r"^\d{2}:\d{2}$")
 
 

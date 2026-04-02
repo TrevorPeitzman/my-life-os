@@ -8,7 +8,7 @@
  *   4. Handle notification click → open PWA URL
  */
 
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const CACHE_NAME = `life-os-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -26,6 +26,8 @@ const APP_SHELL = [
   "/js/today.js",
   "/js/journal.js",
   "/js/daily.js",
+  "/calendar.html",
+  "/js/calendar.js",
   "/manifest.json",
   "/icon-192.png",
   "/icon-512.png",
