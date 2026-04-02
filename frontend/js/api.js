@@ -114,9 +114,7 @@ const api = {
   },
 
   // --- Quote ---
-  getQuote(day) {
-    return this.request("GET", `/quote/${day}`);
-  },
+  getQuote: (day) => request("GET", `/quote/${day}`),
 };
 
 export { api, ApiError };
