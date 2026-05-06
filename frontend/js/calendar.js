@@ -53,12 +53,22 @@ async function renderMonth() {
   });
 
   let days = [];
+  let apiError = false;
   try {
     const data = await api.request("GET", `/journal/consistency?month=${monthStr}`);
-    days = data.days;
+    if (Array.isArray(data.days)) days = data.days;
   } catch (_err) {
+    apiError = true;
     showToast(`Could not load ${monthStr}`, "error");
-    return;
+  }
+
+  // Always generate blank day cells for the month as fallback
+  if (days.length === 0) {
+    const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${viewYear}-${String(viewMonth).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      days.push({ date: dateStr, day: d, morning: false, evening: false });
+    }
   }
 
   // Blank padding cells before the 1st of the month
@@ -98,7 +108,9 @@ async function renderMonth() {
 
   const pastDays = days.filter(d => d.date <= todayStr).length;
   const missed   = pastDays - bothCount - morningOnly - eveningOnly;
-  if (pastDays > 0) {
+  if (apiError) {
+    summary.textContent = "Check-in data unavailable \u2014 calendar shown without completion status.";
+  } else if (pastDays > 0) {
     summary.textContent =
       `${bothCount} full \u00b7 ${morningOnly} morning only \u00b7 ${eveningOnly} evening only \u00b7 ${missed} missed`;
   } else {
