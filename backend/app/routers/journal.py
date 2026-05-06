@@ -15,6 +15,7 @@ def journal_morning(day: str, entry: MorningEntry) -> dict:
         content = vault.read_note("daily", day)
         fm, body = vault.parse_frontmatter(content)
 
+        fm["morning_done"] = True
         if entry.mood_score is not None:
             fm["mood_morning"] = entry.mood_score
         if entry.sleep_hours is not None:
@@ -43,6 +44,7 @@ def journal_evening(day: str, entry: EveningEntry) -> dict:
         content = vault.read_note("daily", day)
         fm, body = vault.parse_frontmatter(content)
 
+        fm["evening_done"] = True
         if entry.mood_score is not None:
             fm["mood_evening"] = entry.mood_score
 
@@ -82,8 +84,8 @@ def get_consistency(month: str) -> dict:
             try:
                 content = vault.read_note("daily", day_str)
                 fm, _ = vault.parse_frontmatter(content)
-                morning_done = fm.get("mood_morning") is not None
-                evening_done = fm.get("mood_evening") is not None
+                morning_done = bool(fm.get("morning_done")) or (fm.get("mood_morning") is not None)
+                evening_done = bool(fm.get("evening_done")) or (fm.get("mood_evening") is not None)
             except ValueError:
                 pass  # oversized or malformed file — treat as incomplete
         days.append({
