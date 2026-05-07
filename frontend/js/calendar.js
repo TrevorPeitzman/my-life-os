@@ -57,9 +57,10 @@ async function renderMonth() {
   try {
     const data = await api.request("GET", `/journal/consistency?month=${monthStr}`);
     if (Array.isArray(data.days)) days = data.days;
-  } catch (_err) {
+  } catch (err) {
     apiError = true;
-    showToast(`Could not load ${monthStr}`, "error");
+    console.error("Calendar consistency error:", err);
+    showToast(`Could not load ${monthStr}: ${err.message || err}`, "error");
   }
 
   // Always generate blank day cells for the month as fallback

@@ -86,8 +86,8 @@ def get_consistency(month: str) -> dict:
                 fm, _ = vault.parse_frontmatter(content)
                 morning_done = bool(fm.get("morning_done")) or (fm.get("mood_morning") is not None)
                 evening_done = bool(fm.get("evening_done")) or (fm.get("mood_evening") is not None)
-            except ValueError:
-                pass  # oversized or malformed file — treat as incomplete
+            except (ValueError, OSError):
+                pass  # oversized, malformed, or unreadable file — treat as incomplete
         days.append({
             "date": day_str,
             "day": day_num,
