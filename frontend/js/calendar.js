@@ -54,13 +54,28 @@ async function renderMonth() {
 
   let days = [];
   let apiError = false;
-  try {
-    const data = await api.request("GET", `/journal/consistency?month=${monthStr}`);
-    if (Array.isArray(data.days)) days = data.days;
-  } catch (err) {
+  let errMessage = "";
+
+  const apiKey = localStorage.getItem("life_os_api_key");
+  console.log("[Calendar] life_os_api_key in localStorage:",
+    apiKey ? `present (${apiKey.length} chars)` : "MISSING");
+
+  if (!apiKey) {
     apiError = true;
-    console.error("Calendar consistency error:", err);
-    showToast(`Could not load ${monthStr}: ${err.message || err}`, "error");
+    errMessage = "API key not set in this browser";
+  } else {
+    const url = `/api/journal/consistency?month=${monthStr}`;
+    console.log("[Calendar] requesting", url);
+    try {
+      const data = await api.request("GET", `/journal/consistency?month=${monthStr}`);
+      console.log("[Calendar] response:", data);
+      if (Array.isArray(data.days)) days = data.days;
+    } catch (err) {
+      apiError = true;
+      errMessage = err.message || String(err);
+      console.error("[Calendar] consistency error:", err);
+      showToast(`Could not load ${monthStr}: ${errMessage}`, "error");
+    }
   }
 
   // Always generate blank day cells for the month as fallback
@@ -110,11 +125,14 @@ async function renderMonth() {
   const pastDays = days.filter(d => d.date <= todayStr).length;
   const missed   = pastDays - bothCount - morningOnly - eveningOnly;
   if (apiError) {
-    summary.innerHTML =
-      `Could not load check-in data. ` +
-      `<a href="#" onclick="location.reload();return false;" style="color:var(--accent)">Reload</a> ` +
-      `or open <strong>DevTools \u2192 Network</strong> and look for the ` +
-      `<code>/api/journal/consistency</code> request to see the exact error.`;
+    const isMissingKey = errMessage === "API key not set in this browser";
+    summary.innerHTML = isMissingKey
+      ? `<strong>API key not set in this browser.</strong> ` +
+        `Go to the <a href="/" style="color:var(--accent)">home page</a> and enter your key. ` +
+        `(Saving entries from another tab/device does not share localStorage.)`
+      : `<strong>Could not load check-in data:</strong> <code>${errMessage}</code>. ` +
+        `<a href="#" onclick="location.reload();return false;" style="color:var(--accent)">Reload</a> ` +
+        `or check <strong>DevTools \u2192 Network</strong> for the <code>/api/journal/consistency</code> request.`;
   } else if (pastDays > 0) {
     summary.textContent =
       `${bothCount} full \u00b7 ${morningOnly} morning only \u00b7 ${eveningOnly} evening only \u00b7 ${missed} missed`;
