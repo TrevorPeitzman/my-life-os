@@ -17,6 +17,9 @@ const now = new Date();
 let viewYear  = now.getFullYear();
 let viewMonth = now.getMonth() + 1; // 1-12
 
+let modalDate     = null;  // YYYY-MM-DD of the currently open day
+let modalOriginal = null;  // content as loaded, for dirty-check on close
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("prev-month").addEventListener("click", () => {
     viewMonth--;
@@ -28,6 +31,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (viewMonth > 12) { viewMonth = 1; viewYear++; }
     renderMonth();
   });
+  document.getElementById("modal-close").addEventListener("click", () => closeModal());
+  document.getElementById("modal-backdrop").addEventListener("click", () => closeModal());
+  document.getElementById("modal-save").addEventListener("click", saveModal);
+
+  document.addEventListener("keydown", e => {
+    const modalOpen = document.getElementById("day-modal").style.display !== "none";
+    if (e.key === "Escape" && modalOpen) {
+      closeModal();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === "s" && modalOpen) {
+      e.preventDefault();
+      saveModal();
+    }
+  });
+
   renderMonth();
 });
 
@@ -67,7 +85,7 @@ async function renderMonth() {
     const url = `/api/journal/consistency?month=${monthStr}`;
     console.log("[Calendar] requesting", url);
     try {
-      const data = await api.request("GET", `/journal/consistency?month=${monthStr}`);
+      const data = await api.getConsistency(monthStr);
       console.log("[Calendar] response:", data);
       if (Array.isArray(data.days)) days = data.days;
     } catch (err) {
@@ -138,5 +156,67 @@ async function renderMonth() {
       `${bothCount} full \u00b7 ${morningOnly} morning only \u00b7 ${eveningOnly} evening only \u00b7 ${missed} missed`;
   } else {
     summary.textContent = "No days yet this month.";
+  }
+}
+
+function openModal(date) {
+  if (document.getElementById("day-modal").style.display !== "none") return;
+
+  const modal   = document.getElementById("day-modal");
+  const spinner = document.getElementById("modal-spinner");
+  const editor  = document.getElementById("modal-editor");
+
+  modalDate     = date;
+  modalOriginal = null;
+
+  document.getElementById("modal-date-label").textContent =
+    new Date(date + "T12:00:00").toLocaleDateString(undefined, {
+      weekday: "long", month: "long", day: "numeric",
+    });
+
+  spinner.style.display = "";
+  editor.style.display  = "none";
+  editor.value          = "";
+  modal.style.display   = "flex";
+
+  api.getDaily(date).then(note => {
+    editor.value  = note.content;
+    modalOriginal = note.content;
+    spinner.style.display = "none";
+    editor.style.display  = "block";
+    editor.focus();
+  }).catch(err => {
+    modal.style.display = "none";
+    modalDate = modalOriginal = null;
+    showToast(`Could not load ${date}: ${err.message}`, "error");
+  });
+}
+
+function closeModal(force = false) {
+  const editor = document.getElementById("modal-editor");
+  if (!force && modalOriginal !== null && editor.value !== modalOriginal) {
+    if (!confirm("You have unsaved changes. Close anyway?")) return;
+  }
+  document.getElementById("day-modal").style.display = "none";
+  modalDate = modalOriginal = null;
+}
+
+async function saveModal() {
+  if (!modalDate) return;
+  const editor  = document.getElementById("modal-editor");
+  const saveBtn = document.getElementById("modal-save");
+  saveBtn.disabled    = true;
+  saveBtn.textContent = "Saving…";
+  try {
+    await api.putDaily(modalDate, editor.value);
+    showToast("Saved", "ok");
+    modalOriginal = editor.value;
+    closeModal(true);
+    renderMonth();
+  } catch (err) {
+    showToast(`Save failed: ${err.message}`, "error");
+  } finally {
+    saveBtn.disabled    = false;
+    saveBtn.textContent = "Save";
   }
 }
