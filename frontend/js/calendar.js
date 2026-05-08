@@ -138,6 +138,9 @@ async function renderMonth() {
     }
 
     grid.appendChild(el);
+    if (date <= todayStr) {
+      el.addEventListener("click", () => openModal(date));
+    }
   });
 
   const pastDays = days.filter(d => d.date <= todayStr).length;
