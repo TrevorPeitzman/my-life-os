@@ -179,15 +179,16 @@ function openModal(date) {
   editor.value          = "";
   modal.style.display   = "flex";
 
+  const targetDate = date;
   api.getDaily(date).then(note => {
+    if (modalDate !== targetDate) return;
     editor.value  = note.content;
     modalOriginal = note.content;
     spinner.style.display = "none";
     editor.style.display  = "block";
     editor.focus();
   }).catch(err => {
-    modal.style.display = "none";
-    modalDate = modalOriginal = null;
+    closeModal(true);
     showToast(`Could not load ${date}: ${err.message}`, "error");
   });
 }
