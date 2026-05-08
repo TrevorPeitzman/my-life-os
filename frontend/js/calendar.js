@@ -110,7 +110,11 @@ async function renderMonth() {
   const pastDays = days.filter(d => d.date <= todayStr).length;
   const missed   = pastDays - bothCount - morningOnly - eveningOnly;
   if (apiError) {
-    summary.textContent = "Check-in data unavailable \u2014 calendar shown without completion status.";
+    summary.innerHTML =
+      `Could not load check-in data. ` +
+      `<a href="#" onclick="location.reload();return false;" style="color:var(--accent)">Reload</a> ` +
+      `or open <strong>DevTools \u2192 Network</strong> and look for the ` +
+      `<code>/api/journal/consistency</code> request to see the exact error.`;
   } else if (pastDays > 0) {
     summary.textContent =
       `${bothCount} full \u00b7 ${morningOnly} morning only \u00b7 ${eveningOnly} evening only \u00b7 ${missed} missed`;
