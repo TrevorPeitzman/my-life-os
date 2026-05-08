@@ -81,6 +81,7 @@ const api = {
   // --- Journal ---
   journalMorning: (day, entry) => request("POST", `/journal/${day}/morning`, entry),
   journalEvening: (day, entry) => request("POST", `/journal/${day}/evening`, entry),
+  getConsistency: (month)      => request("GET",  `/journal/consistency?month=${month}`),
 
   // --- Tasks ---
   getOpenTasks: (horizon = "daily", daysBack = 90) =>

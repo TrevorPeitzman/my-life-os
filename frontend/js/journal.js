@@ -81,14 +81,14 @@ function initMorning(form) {
 
     // Text field prefill from saved Morning section
     const body = note.content;
-    const g1 = body.match(/\*\*Grateful 1\*\*:\s*(.+)/);
-    const g2 = body.match(/\*\*Grateful 2\*\*:\s*(.+)/);
-    const g3 = body.match(/\*\*Grateful 3\*\*:\s*(.+)/);
-    const gr1 = body.match(/\*\*Great today 1\*\*:\s*(.+)/);
-    const gr2 = body.match(/\*\*Great today 2\*\*:\s*(.+)/);
-    const gr3 = body.match(/\*\*Great today 3\*\*:\s*(.+)/);
-    const work = body.match(/\*\*Realistic work\*\*:\s*(.+)/);
-    const aff = body.match(/\*\*Affirmation\*\*:\s*([\s\S]+?)(?=\n\*\*|\n##|$)/);
+    const g1 = body.match(/\*\*Grateful 1\*\*:[ \t]*(.+)/);
+    const g2 = body.match(/\*\*Grateful 2\*\*:[ \t]*(.+)/);
+    const g3 = body.match(/\*\*Grateful 3\*\*:[ \t]*(.+)/);
+    const gr1 = body.match(/\*\*Great today 1\*\*:[ \t]*(.+)/);
+    const gr2 = body.match(/\*\*Great today 2\*\*:[ \t]*(.+)/);
+    const gr3 = body.match(/\*\*Great today 3\*\*:[ \t]*(.+)/);
+    const work = body.match(/\*\*Realistic work\*\*:[ \t]*(.+)/);
+    const aff = body.match(/\*\*Affirmation\*\*:[ \t]*([\s\S]+?)(?=\n\*\*|\n##|$)/);
 
     if (g1) document.getElementById("gratitude-1").value = g1[1].trim();
     if (g2) document.getElementById("gratitude-2").value = g2[1].trim();
