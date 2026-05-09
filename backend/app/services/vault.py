@@ -152,7 +152,7 @@ def note_exists(horizon: str, key: str) -> bool:
     try:
         path = _safe_path(horizon, key)
         return path.exists()
-    except ValueError:
+    except (ValueError, OSError):
         return False
 
 

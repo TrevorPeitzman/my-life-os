@@ -1,7 +1,7 @@
 import calendar as cal_module
 import re as _re
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 
 from app.models import EveningEntry, MorningEntry
 from app.services import vault
@@ -62,12 +62,14 @@ def journal_evening(day: str, entry: EveningEntry) -> dict:
 
 
 @router.get("/consistency")
-def get_consistency(month: str) -> dict:
+def get_consistency(month: str, response: Response) -> dict:
     """
     Return morning/evening completion for every day in a month.
     month: "YYYY-MM"
     Completion is inferred from mood_morning / mood_evening frontmatter fields.
     """
+    response.headers["Cache-Control"] = "no-store"
+
     if not _re.match(r"^\d{4}-(0[1-9]|1[0-2])$", month):
         raise HTTPException(status_code=422, detail="month must be YYYY-MM")
 
@@ -86,8 +88,8 @@ def get_consistency(month: str) -> dict:
                 fm, _ = vault.parse_frontmatter(content)
                 morning_done = bool(fm.get("morning_done")) or (fm.get("mood_morning") is not None)
                 evening_done = bool(fm.get("evening_done")) or (fm.get("mood_evening") is not None)
-            except ValueError:
-                pass  # oversized or malformed file — treat as incomplete
+            except (ValueError, OSError):
+                pass  # oversized, malformed, or unreadable file — treat as incomplete
         days.append({
             "date": day_str,
             "day": day_num,

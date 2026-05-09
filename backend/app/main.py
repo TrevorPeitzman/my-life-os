@@ -152,8 +152,20 @@ def manifest() -> FileResponse:
 # Mount remaining static files (HTML, CSS, JS, images) at root.
 # html=True means index.html is served for directory requests and unknown
 # paths (SPA-style routing).
+#
+# Custom subclass adds no-cache headers to HTML and JS so that Cloudflare
+# (and any other intermediary cache) cannot serve a stale frontend bundle.
+# CSS / images are still allowed to cache normally.
+class _NoCacheStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):  # type: ignore[override]
+        response = await super().get_response(path, scope)
+        if path.endswith(".js") or path.endswith(".html") or path == "":
+            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        return response
+
+
 if FRONTEND_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="static")
+    app.mount("/", _NoCacheStaticFiles(directory=str(FRONTEND_DIR), html=True), name="static")
 else:
     logger.warning("FRONTEND_DIR %s does not exist — static files will not be served", FRONTEND_DIR)
 

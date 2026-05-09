@@ -8,7 +8,7 @@
  *   4. Handle notification click → open PWA URL
  */
 
-const CACHE_VERSION = "v4";
+const CACHE_VERSION = "v6";
 const CACHE_NAME = `life-os-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -60,7 +60,7 @@ self.addEventListener("activate", event => {
 });
 
 // ---------------------------------------------------------------------------
-// Fetch — cache-first for static, network-first for /api/
+// Fetch — cache-first for static, network-first for /api/ and /js/
 // ---------------------------------------------------------------------------
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
@@ -78,7 +78,24 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Cache-first for everything else
+  if (url.pathname.startsWith("/js/")) {
+    // Network-first for JS: ensures code updates are always picked up.
+    // Falls back to cache only when offline.
+    event.respondWith(
+      fetch(event.request)
+        .then(resp => {
+          if (resp.ok) {
+            const clone = resp.clone();
+            caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+          }
+          return resp;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-first for HTML, CSS, images, etc.
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
